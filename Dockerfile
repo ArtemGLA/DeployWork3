@@ -13,4 +13,4 @@ RUN dpkg -i /tmp/app.deb && \
 RUN dpkg -i /tmp/app.deb || apt-get update && apt-get install -f -y && dpkg -i /tmp/app.deb
 
 # Указываем полный путь к программе!
-CMD ["/usr/bin/hello", "--test"]
+CMD ["/usr/bin/hello"]
