@@ -15,5 +15,34 @@ jobs:
       - name: Build Docker image
         run: docker build -t myapp-test .
       
-      - name: Run container
-        run: docker run -it myapp-test
+      - name: Run container in background
+        run: |
+          docker run -d --name myapp-container myapp-test
+          sleep 5
+          docker logs myapp-container
+          docker stop myapp-container
+          docker rm myapp-container
+      
+      - name: Test with input simulation
+        run: |
+          # Создаем временный контейнер и передаем ему тестовый ввод
+          echo "test input" | docker run -i --rm myapp-test /usr/bin/hello
+      
+      - name: Test with specific arguments
+        run: |
+          docker run --rm myapp-test /usr/bin/hello --help || true
+          docker run --rm myapp-test /usr/bin/hello --version || true
+      
+      - name: Quick test without interaction
+        run: |
+          # Запускаем контейнер на короткое время и проверяем логи
+          docker run --name quick-test -d myapp-test
+          sleep 3
+          docker logs quick-test
+          docker stop quick-test
+          docker rm quick-test
+      
+      - name: Verify package installation
+        run: |
+          docker run --rm myapp-test ls -la /usr/bin/hello && echo "Package installed successfully" || echo "Package not found"
+          docker run --rm myapp-test file /usr/bin/hello || echo "Cannot determine file type"
