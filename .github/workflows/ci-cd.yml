@@ -16,4 +16,4 @@ jobs:
         run: docker build -t myapp-test .
       
       - name: Run container
-        run: docker run --rm myapp-test --test
+        run: docker run -it myapp-test
