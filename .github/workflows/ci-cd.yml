@@ -89,26 +89,34 @@ jobs:
           name: deb-package
           path: .  # Скачиваем в корень, где ItalianCode.deb будет доступен
           
-      - name: Fix permissions before build
+            - name: Build Docker image with forced permissions
         run: |
-          # Распакуем deb и проверим права
-          dpkg-deb -x ItalianCode.deb temp_extract
-          ls -la temp_extract/usr/bin/
-          # Если нужно, пересоберем с правильными правами
-      
-      - name: Build Docker image with fixed permissions
-        run: |
-          # Создаем временный Dockerfile
-          cat > Dockerfile.test << 'EOF'
+          cat > Dockerfile.force << 'EOF'
           FROM ubuntu:latest
+          
+          # Устанавливаем зависимости и пакет с принудительными правами
+          RUN apt-get update && apt-get install -y g++ make && rm -rf /var/lib/apt/lists/*
+          
           COPY ItalianCode.deb /tmp/app.deb
+          
+          # Устанавливаем пакет и ПРИНУДИТЕЛЬНО ставим права 777
           RUN dpkg -i /tmp/app.deb || true && \
-              chmod 755 /usr/bin/hello && \
+              chmod 777 /usr/bin/hello && \
               ls -la /usr/bin/hello && \
               rm /tmp/app.deb
+          
+          # Проверка прав при запуске контейнера
+          CMD ["/usr/bin/hello"]
           EOF
           
-          docker build -t myapp-test -f Dockerfile.test .
+          docker build -t myapp-test -f Dockerfile.force .
+      
+      - name: Debug permissions inside container
+        run: |
+          echo "=== Проверка прав внутри контейнера ==="
+          docker run --rm myapp-test ls -la /usr/bin/hello
+          docker run --rm myapp-test file /usr/bin/hello
+          docker run --rm myapp-test whoami
       
       - name: Build Docker image
         run: docker build -t myapp-test .
