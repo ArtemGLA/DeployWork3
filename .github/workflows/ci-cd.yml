@@ -22,13 +22,12 @@ jobs:
         run: |
           make bin
           make install
-          chmod +x ../usr/bin/hello
       
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: built-program
-          path: usr/bin/hello  # Путь относительно корня проекта
+          path: usr/bin/hello
           retention-days: 1
 
   RunTest:
@@ -41,9 +40,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: built-program
-          path: ./usr/bin  # Скачиваем прямо в usr/bin
-      
-      - run: chmod +x ./usr/bin/hello
+          path: ./usr/bin
       
       - name: Compile and run tests
         run: |
@@ -61,18 +58,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: built-program
-          path: ./usr/bin  # Скачиваем в правильную структуру
+          path: ./usr/bin
       
       - name: Build .deb package
         run: |
-          # Теперь структура правильная: ./usr/bin/hello существует
           dpkg-deb --build . ItalianCode.deb
       
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: "ItalianCode.deb"
+          path: ItalianCode.deb
           retention-days: 1
 
   test-docker:
@@ -81,42 +77,13 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Download deb package
         uses: actions/download-artifact@v4
         with:
           name: deb-package
-          path: .  # Скачиваем в корень, где ItalianCode.deb будет доступен
-          
-      - name: Perm
-        run: |
-          cat > Dockerfile.force << 'EOF'
-          FROM ubuntu:latest
-          
-          # Устанавливаем зависимости и пакет с принудительными правами
-          RUN apt-get update && apt-get install -y g++ make && rm -rf /var/lib/apt/lists/*
-          
-          COPY ItalianCode.deb /tmp/app.deb
-          
-          # Устанавливаем пакет и ПРИНУДИТЕЛЬНО ставим права 777
-          RUN dpkg -i /tmp/app.deb || true && \
-              chmod 777 /usr/bin/hello && \
-              ls -la /usr/bin/hello && \
-              rm /tmp/app.deb
-          
-          # Проверка прав при запуске контейнера
-          CMD ["/usr/bin/hello"]
-          EOF
-          
-          docker build -t myapp-test -f Dockerfile.force .
-      
-      - name: Debug permissions inside container
-        run: |
-          echo "=== Проверка прав внутри контейнера ==="
-          docker run --rm myapp-test ls -la /usr/bin/hello
-          docker run --rm myapp-test file /usr/bin/hello
-          docker run --rm myapp-test whoami
+          path: .
       
       - name: Build Docker image
         run: docker build -t myapp-test .
@@ -188,13 +155,10 @@ jobs:
           16
           EOF
           
-          # Запускаем программу с входными данными и сохраняем вывод
           echo "=== Запуск программы с тестовыми данными ==="
-          cat input.txt | docker run -i --user root --rm myapp-test > output.txt
+          cat input.txt | docker run -i --rm myapp-test > output.txt
           
-          # Показываем вывод программы
           echo "=== Вывод программы ==="
           cat output.txt
           
-          # Проверяем, что программа завершилась успешно
           echo "=== Тест завершен ==="
