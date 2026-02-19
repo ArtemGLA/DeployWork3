@@ -89,7 +89,7 @@ jobs:
           name: deb-package
           path: .  # Скачиваем в корень, где ItalianCode.deb будет доступен
           
-            - name: Build Docker image with forced permissions
+      - name: Perm
         run: |
           cat > Dockerfile.force << 'EOF'
           FROM ubuntu:latest
