@@ -90,7 +90,7 @@ jobs:
           path: .  # Скачиваем в корень, где ItalianCode.deb будет доступен
       
       - name: Build Docker image
-        run: docker build -t --user root myapp-test .
+        run: docker build -t myapp-test .
       
       - name: Test program with input data
         run: |
@@ -161,7 +161,7 @@ jobs:
           
           # Запускаем программу с входными данными и сохраняем вывод
           echo "=== Запуск программы с тестовыми данными ==="
-          cat input.txt | docker run -i --rm myapp-test > output.txt
+          cat input.txt | docker run -i --user root --rm myapp-test > output.txt
           
           # Показываем вывод программы
           echo "=== Вывод программы ==="
