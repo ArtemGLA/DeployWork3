@@ -104,3 +104,11 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
           docker tag ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/myapp:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          
+      - name: Upload container artifact to dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-image
+          path: dist/myapp-container.tar.gz
+          retention-days: 7
+          if-no-files-found: error
