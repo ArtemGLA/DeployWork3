@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY ItalianCode.deb /tmp/app.deb
+RUN dpkg -i /tmp/app.deb && \
+    chmod +x /usr/bin/hello  
 
 # Устанавливаем пакет
 RUN dpkg -i /tmp/app.deb || apt-get update && apt-get install -f -y && dpkg -i /tmp/app.deb
