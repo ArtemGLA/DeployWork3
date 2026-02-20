@@ -73,7 +73,7 @@ jobs:
           path: ItalianCode.deb
           retention-days: 1
 
-  test-docker:
+  Docker:
     needs: RunPackage
     runs-on: ubuntu-22.04
     
@@ -88,7 +88,7 @@ jobs:
           path: .
       
       - name: Build Docker image
-        run: docker build -t myapp-test .
+        run: docker build -t myapp .
       
       - name: Build Docker image with tag
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }} .
@@ -107,9 +107,9 @@ jobs:
           
       - name: Save Docker image to dist folder (локальный артефакт)
         run: |
-          docker save myapp-test:latest -o dist/myapp-container.tar
+          docker save myapp:latest -o dist/myapp-container.tar
           gzip -f dist/myapp-container.tar
-          echo "АЛокальный артефакт контейнера создан:"
+          echo "Локальный артефакт контейнера создан:"
           ls -la dist/
       
       - name: Upload container artifact to dist
