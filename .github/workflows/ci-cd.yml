@@ -109,7 +109,7 @@ jobs:
         run: |
           docker save myapp-test:latest -o dist/myapp-container.tar
           gzip -f dist/myapp-container.tar
-          echo "✅ Локальный артефакт контейнера создан:"
+          echo "АЛокальный артефакт контейнера создан:"
           ls -la dist/
       
       - name: Upload container artifact to dist
