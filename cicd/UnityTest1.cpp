@@ -11,7 +11,7 @@ bool runTest(const string& testName, const string& inputFile, const string& outp
     // Формируем команду для запуска вашей программы
     string command = "../usr/bin/hello < " + inputFile + " > " + outputFile;
     
-    // Запускаем программу
+    // Запускаем программуe
     int result = system(command.c_str());
     
     if (result == 0) {
