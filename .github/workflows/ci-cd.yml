@@ -1,0 +1,120 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  RunMake:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential g++ make
+      
+      - name: Build program
+        working-directory: ./src
+        run: |
+          make bin
+          make install
+      
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-program
+          path: usr/bin/hello
+          retention-days: 1
+
+  RunTest:
+    needs: RunMake
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download built program
+        uses: actions/download-artifact@v4
+        with:
+          name: built-program
+          path: ./usr/bin
+      
+      - name: Compile and run tests
+        run: |
+          make -C ./cicd
+
+  RunPackage:
+    needs: RunTest
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: built-program
+          path: ./usr/bin
+      
+      - name: Build .deb package
+        run: |
+          dpkg-deb --build . ItalianCode.deb
+      
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: ItalianCode.deb
+          retention-days: 1
+
+  Docker:
+    needs: RunPackage
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download deb package
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-package
+          path: .
+      
+      - name: Build Docker image
+        run: docker build -t myapp .
+      
+      - name: Build Docker image with tag
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }} .
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          
+      - name: Save Docker image to dist folder (локальный артефакт)
+        run: |
+          docker save myapp:latest -o dist/myapp-container.tar
+          gzip -f dist/myapp-container.tar
+          echo "Локальный артефакт контейнера создан:"
+          ls -la dist/
+      
+      - name: Upload container artifact to dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-image
+          path: dist/myapp-container.tar.gz
+          retention-days: 7
