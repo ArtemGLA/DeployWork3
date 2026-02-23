@@ -14,7 +14,6 @@ int inputNumber(const string& prompt) {
         // Проверка на корректный ввод (чтобы не ввели буквы или символы)
         if (cin.fail()) {
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Ошибка! Введите целое число от 1 до 100." << endl;
         }
         // Проверка диапазона
